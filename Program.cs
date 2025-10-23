@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
-class Program
+namespace Timetable_Project
 {
-    static void Main()
+
+    class Program
     {
-        //SS
-        //Test Gian
+        static void Main()
+        {
+            //SS
+            //Test Gian
+        }
     }
 }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Timetable-Project")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86795e7453437531acc1e27fda388d910baef020")]
 [assembly: System.Reflection.AssemblyProductAttribute("Timetable-Project")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Timetable-Project")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

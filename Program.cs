@@ -9,8 +9,7 @@ namespace Timetable_Project
     {
         static void Main()
         {
-            //SS
-            //Test Gian
+            
         }
     }
 }

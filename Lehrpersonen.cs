@@ -4,15 +4,14 @@ using System.Linq;
 namespace Timetable_Project
 {
     public class Lehrer{
-        private string _nachnamename;
+        private string _nachname;
         private string _vorname;
-        private List<Fach> ;
-        private int ID;
-        private List<DateTime>;
-    
-    private void addFach (){
+        private List<string> _faecher;
+        private int _id;
+        private List<DateTime> _verfuegbarkeit;
 
-        
+    private void addFach (string fach){
+        _faecher.Add(fach);
     }
     
     

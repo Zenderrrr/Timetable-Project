@@ -1,0 +1,19 @@
+# Build
+bin/
+obj/
+
+# VS Code / VS
+.vs/
+.vscode/
+
+# User-specific
+*.user
+*.suo
+
+# Temporary files
+*.db
+*.sqlite
+*.pdb
+*.exe
+*.dll
+*.cache

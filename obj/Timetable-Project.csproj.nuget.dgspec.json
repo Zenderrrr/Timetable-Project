@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj": {}
+    "c:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj": {
+    "c:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj",
+        "projectUniqueName": "c:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj",
         "projectName": "Timetable-Project",
-        "projectPath": "C:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj",
+        "projectPath": "c:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\Timetable-Project.csproj",
         "packagesPath": "C:\\Users\\ebiru\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\obj\\",
+        "outputPath": "c:\\Users\\ebiru\\code\\Informatik-2.Jahr\\IPT5.1\\Timetable-Project\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

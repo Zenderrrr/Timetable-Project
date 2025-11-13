@@ -1,17 +1,22 @@
-public class Schueler_in
-{
-    public int Id { get; private set; }
-    public string Name { get; private set; }
-    public int Alter { get; private set; }
-    public string Klasse { get; private set; }
-    public List<string> Faecher { get; internal set; }
+using System.Collections.Generic;
 
-    public Schueler_in(int id, string name, int alter, string klasse)
+namespace Timetable_Project
+{
+    public class Schueler_in
     {
-        Id = id;
-        Name = name;
-        Alter = alter;
-        Klasse = klasse;
-        Faecher = new List<string>();
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Alter { get; set; }
+        public string Klasse { get; set; }
+        public List<string> Faecher { get; set; } = new();
+
+
+        public Schueler_in(int id, string name, int alter, string klasse)
+        {
+            Id = id;
+            Name = name;
+            Alter = alter;
+            Klasse = klasse;
+        }
     }
 }

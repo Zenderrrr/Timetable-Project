@@ -9,13 +9,25 @@ namespace Timetable_Project
         public const int TAGE = 5;
         public const int STUNDEN = 8;
 
-        // Matrix [TagIndex, StundeIndex]
+        
         public Stunde[,] Matrix { get; set; }
 
         // Gewichtungen (einstellbar)
         public double GewichtRandstunden { get; set; } = 1.0;
         public double GewichtZwischenstunden { get; set; } = 1.0;
         public double GewichtRessourcen { get; set; } = 0.2;
+
+        // Uhrzeiten für jede Stunde
+        private static readonly string[] Uhrzeiten = {
+            "08:00-08:45",    // 1. Stunde
+            "08:45-09:30",    // 2. Stunde  
+            "09:50-10:35",    // 3. Stunde
+            "10:35-11:20",    // 4. Stunde
+            "11:40-12:25",    // 5. Stunde
+            "12:25-13:10",    // 6. Stunde
+            "13:30-14:15",    // 7. Stunde
+            "14:15-15:00"     // 8. Stunde
+        };
 
         public Stundenplan()
         {
@@ -35,25 +47,81 @@ namespace Timetable_Project
         }
 
         public void Anzeigen()
-        {
-            string[] tage = { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag" };
+{
+    string[] tage = { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag" };
+    
+    
+    string[] uhrzeiten = {
+        "08:00-08:45", "08:45-09:30", "09:50-10:35", "10:35-11:20",
+        "11:40-12:25", "12:25-13:10", "13:30-14:15", "14:15-15:00"
+    };
 
-            for (int t = 0; t < TAGE; t++)
+    
+    Console.WriteLine("\n" + new string('=', 120));
+    Console.Write("Stunde | Zeit\t|");
+    foreach (var tag in tage)
+    {
+        Console.Write($" {tag,-18} |");
+    }
+    Console.WriteLine("\n" + new string('=', 120));
+
+    // Stunden
+    for (int stunde = 0; stunde < STUNDEN; stunde++)
+    {
+        Console.Write($" {stunde + 1,-5} | {uhrzeiten[stunde]}\t|");
+        
+        for (int tag = 0; tag < TAGE; tag++)
+        {
+            var stundeDaten = Matrix[tag, stunde];
+            if (stundeDaten != null)
             {
-                Console.WriteLine($"\n--- {tage[t]} ---");
-                bool leer = true;
-                for (int s = 0; s < STUNDEN; s++)
-                {
-                    var st = Matrix[t, s];
-                    if (st != null)
-                    {
-                        Console.WriteLine($"{s + 1}. Stunde: {st.Fach} ({st.Klasse}) mit {st.Lehrperson} in {st.Raum}");
-                        leer = false;
-                    }
-                }
-                if (leer) Console.WriteLine("(keine Einträge)");
+                string eintrag = $"{stundeDaten.Fach} ({stundeDaten.Klasse})";
+                Console.Write($" {eintrag,-18} |");
+            }
+            else
+            {
+                Console.Write($" {"-",-18} |");
             }
         }
+        Console.WriteLine();
+    }
+    Console.WriteLine(new string('=', 120));
+}
+
+// Zusätzlich: Detail-Ansicht für mehr Infos
+public void AnzeigenDetail()
+{
+    string[] tage = { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag" };
+    string[] uhrzeiten = {
+        "08:00-08:45", "08:45-09:30", "09:50-10:35", "10:35-11:20",
+        "11:40-12:25", "12:25-13:10", "13:30-14:15", "14:15-15:00"
+    };
+
+    for (int tag = 0; tag < TAGE; tag++)
+    {
+        Console.WriteLine($"\n┌────────────────── {tage[tag]} ──────────────────");
+        bool hatEintraege = false;
+        
+        for (int stunde = 0; stunde < STUNDEN; stunde++)
+        {
+            var stundeDaten = Matrix[tag, stunde];
+            if (stundeDaten != null)
+            {
+                Console.WriteLine($"│ {stunde + 1}. Stunde ({uhrzeiten[stunde]}):");
+                Console.WriteLine($"│   {stundeDaten.Fach} mit {stundeDaten.Lehrperson}");
+                Console.WriteLine($"│   Raum: {stundeDaten.Raum}, Klasse: {stundeDaten.Klasse}");
+                Console.WriteLine($"├──────────────────────────────────────────");
+                hatEintraege = true;
+            }
+        }
+        
+        if (!hatEintraege)
+        {
+            Console.WriteLine("│ Keine Einträge");
+            Console.WriteLine($"├──────────────────────────────────────────");
+        }
+    }
+}
 
         public double BewertePlan(out double randstrafe, out double zwischenstrafe, out double ressourcenstrafe)
         {
@@ -76,7 +144,7 @@ namespace Timetable_Project
             }
             score -= randstrafe;
 
-            // Zwischenstunden: wenn nach einer belegten Stunde später eine Lücke kommt und danach erneut belegung
+            
             for (int t = 0; t < TAGE; t++)
             {
                 bool begonnen = false;

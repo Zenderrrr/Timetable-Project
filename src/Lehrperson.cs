@@ -6,9 +6,9 @@ namespace Timetable_Project
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        // Liste von Fächern (string Titel)
+        
         public List<string> Faecher { get; set; } = new();
-        // Verfügbarkeit pro Wochentag, z.B. "Dienstag" -> false
+        
         public Dictionary<string, bool> Verfuegbarkeit { get; set; } = new();
 
 

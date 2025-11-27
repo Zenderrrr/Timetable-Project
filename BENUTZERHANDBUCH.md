@@ -62,7 +62,6 @@ Fächer (komma-getrennt): Mathematik, Physik
 Name: Max Mustermann
 Alter: 16
 Klasse: 10A
-Fächer (komma-getrennt): Mathematik, Deutsch, Englisch
 ```
 Die angegebenen Fächer müssen bereits im System existieren.
 

@@ -6,6 +6,9 @@ using System.Text.Json;
 
 namespace Timetable_Project
 {
+    /// <summary>
+    /// Container-Klasse für alle Daten des Stundenplan-Systems
+    /// </summary>
     public class Daten
     {
         public List<Fach> Faecher { get; set; } = new();
@@ -23,7 +26,6 @@ namespace Timetable_Project
         static void Main()
         {
             LoadDaten();
-            
             while (true)
             {
                 Console.Clear();
@@ -33,25 +35,25 @@ namespace Timetable_Project
                 Console.WriteLine("3. Lehrperson hinzufügen");
                 Console.WriteLine("4. Schüler hinzufügen");
                 Console.WriteLine("5. Raum hinzufügen");
-                Console.WriteLine("6. Stundenplan generieren");
-                Console.WriteLine("7. Stundenplan anzeigen");
+                Console.WriteLine("6. Verfügbarkeit verwalten");
+                Console.WriteLine("7. Stundenplan generieren");
+                Console.WriteLine("8. Stundenplan anzeigen");
                 Console.WriteLine("0. Beenden");
                 Console.Write("Auswahl: ");
-
-                switch (Console.ReadLine())
+                
+                var input = Console.ReadLine();
+                switch (input ?? "")
                 {
                     case "1": ShowAllData(); break;
                     case "2": AddFach(); break;
                     case "3": AddLehrperson(); break;
                     case "4": AddSchueler(); break;
                     case "5": AddRaum(); break;
-                    case "6": GeneratePlan(); break;
-                    case "7": ShowPlan(); break;
+                    case "6": VerfuegbarkeitVerwalten(); break;
+                    case "7": GeneratePlan(); break;
+                    case "8": ShowPlan(); break;
                     case "0": SaveDaten(); return;
-                    default: 
-                        Console.WriteLine("Ungültige Auswahl!");
-                        WaitForKey();
-                        break;
+                    default: Console.WriteLine("Ungültige Auswahl!"); WaitForKey(); break;
                 }
             }
         }
@@ -60,7 +62,6 @@ namespace Timetable_Project
         {
             Console.Clear();
             Console.WriteLine("=== ALLE DATEN ===");
-            
             Console.WriteLine($"\nFÄCHER ({daten.Faecher.Count}):");
             foreach (var f in daten.Faecher)
                 Console.WriteLine($"- {f.Title} ({f.Wochenstunden} WS)");
@@ -88,7 +89,6 @@ namespace Timetable_Project
             string name = Console.ReadLine();
             Console.Write("Wochenstunden: ");
             int ws = int.Parse(Console.ReadLine());
-            
             int id = daten.Faecher.Count > 0 ? daten.Faecher.Max(f => f.Id) + 1 : 1;
             var neuesFach = new Fach(id, name, ws);
             daten.Faecher.Add(neuesFach);
@@ -103,14 +103,12 @@ namespace Timetable_Project
             Console.WriteLine("=== LEHRPERSON HINZUFÜGEN ===");
             Console.Write("Name: ");
             string name = Console.ReadLine();
-            
             int id = daten.Lehrpersonen.Count > 0 ? daten.Lehrpersonen.Max(l => l.Id) + 1 : 1;
             var lp = new Lehrperson(id, name);
-            
+
             Console.WriteLine("Verfügbare Fächer: " + string.Join(", ", daten.Faecher.Select(f => f.Title)));
             Console.Write("Fächer (komma-getrennt): ");
             string faecherInput = Console.ReadLine();
-            
             if (!string.IsNullOrEmpty(faecherInput))
             {
                 foreach (var fachName in faecherInput.Split(','))
@@ -143,30 +141,22 @@ namespace Timetable_Project
             int alter = int.Parse(Console.ReadLine());
             Console.Write("Klasse: ");
             string klasse = Console.ReadLine();
-            
             int id = daten.Schueler.Count > 0 ? daten.Schueler.Max(s => s.Id) + 1 : 1;
             var s = new Schueler_in(id, name, alter, klasse);
             
-            Console.WriteLine("Verfügbare Fächer: " + string.Join(", ", daten.Faecher.Select(f => f.Title)));
-            Console.Write("Fächer (komma-getrennt): ");
-            string faecherInput = Console.ReadLine();
-            
-            if (!string.IsNullOrEmpty(faecherInput))
+            if (daten.Faecher.Count > 0)
             {
-                foreach (var fachName in faecherInput.Split(','))
+                foreach (var fach in daten.Faecher)
                 {
-                    string trimmed = fachName.Trim();
-                    if (daten.Faecher.Any(f => f.Title.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        s.Faecher.Add(trimmed);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Warnung: Fach '{trimmed}' existiert nicht in der Datenbank!");
-                    }
+                    s.Faecher.Add(fach.Title);
                 }
+                Console.WriteLine($"Dem Schüler wurden automatisch alle {daten.Faecher.Count} Fächer zugewiesen.");
             }
-
+            else
+            {
+                Console.WriteLine("Hinweis: Keine Fächer vorhanden. Bitte zuerst Fächer hinzufügen.");
+            }
+            
             daten.Schueler.Add(s);
             SaveDaten();
             Console.WriteLine("Schüler hinzugefügt!");
@@ -181,7 +171,6 @@ namespace Timetable_Project
             string raum = Console.ReadLine();
             Console.Write("Kapazität: ");
             int kap = int.Parse(Console.ReadLine());
-            
             int id = daten.Raeume.Count > 0 ? daten.Raeume.Max(r => r.Id) + 1 : 1;
             daten.Raeume.Add(new Raum(id, raum, kap));
             SaveDaten();
@@ -189,59 +178,176 @@ namespace Timetable_Project
             WaitForKey();
         }
 
+        static void VerfuegbarkeitVerwalten()
+        {
+            Console.Clear();
+            Console.WriteLine("=== VERFÜGBARKEIT VERWALTEN ===");
+            Console.WriteLine("1. Lehrpersonen-Verfügbarkeit");
+            Console.WriteLine("2. Raum-Verfügbarkeit");
+            Console.Write("Auswahl: ");
+            
+            switch (Console.ReadLine())
+            {
+                case "1":
+                    LehrpersonVerfuegbarkeit();
+                    break;
+                case "2":
+                    RaumVerfuegbarkeit();
+                    break;
+                default:
+                    Console.WriteLine("Ungültige Auswahl!");
+                    WaitForKey();
+                    break;
+            }
+        }
+
+        static void LehrpersonVerfuegbarkeit()
+        {
+            Console.Clear();
+            Console.WriteLine("=== LEHRPERSON VERFÜGBARKEIT ===");
+            
+            if (daten.Lehrpersonen.Count == 0)
+            {
+                Console.WriteLine("Keine Lehrpersonen vorhanden!");
+                WaitForKey();
+                return;
+            }
+
+            for (int i = 0; i < daten.Lehrpersonen.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {daten.Lehrpersonen[i].Name}");
+            }
+            
+            Console.Write("Lehrperson auswählen: ");
+            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= daten.Lehrpersonen.Count)
+            {
+                var lp = daten.Lehrpersonen[index - 1];
+                BearbeiteLehrpersonVerfuegbarkeit(lp);
+            }
+        }
+
+        static void BearbeiteLehrpersonVerfuegbarkeit(Lehrperson lp)
+        {
+            string[] tage = { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag" };
+            string[] zeiten = { "08:00-08:45", "08:45-09:30", "09:50-10:35", "10:35-11:20", 
+                               "11:40-12:25", "12:25-13:10", "13:30-14:15", "14:15-15:00" };
+
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine($"Verfügbarkeit für {lp.Name} (X = verfügbar, O = nicht verfügbar)");
+                Console.WriteLine("Taste: (T)ag wechseln, (S)tunde umschalten, (B)eenden");
+                
+                for (int tag = 0; tag < tage.Length; tag++)
+                {
+                    Console.Write($"{tage[tag]}: ");
+                    for (int stunde = 0; stunde < zeiten.Length; stunde++)
+                    {
+                        bool verfuegbar = lp.IstVerfuegbar(tage[tag], stunde);
+                        Console.Write(verfuegbar ? "[X] " : "[O] ");
+                    }
+                    Console.WriteLine();
+                }
+
+                Console.Write("Aktion: ");
+                var input = Console.ReadLine()?.ToLower() ?? "";
+                
+                if (input == "b") break;
+                else if (input == "t")
+                {
+                    Console.Write("Tag (1-5): ");
+                    if (int.TryParse(Console.ReadLine(), out int tag) && tag >= 1 && tag <= 5)
+                    {
+                        Console.Write("Stunde (1-8): ");
+                        if (int.TryParse(Console.ReadLine(), out int stunde) && stunde >= 1 && stunde <= 8)
+                        {
+                            bool aktuell = lp.IstVerfuegbar(tage[tag - 1], stunde - 1);
+                            lp.SetzeVerfuegbarkeit(tage[tag - 1], stunde - 1, !aktuell);
+                            Console.WriteLine($"Verfügbarkeit für {tage[tag - 1]}, {stunde}. Stunde geändert!");
+                            WaitForKey();
+                        }
+                    }
+                }
+            }
+            SaveDaten();
+        }
+
+        static void RaumVerfuegbarkeit()
+        {
+            Console.Clear();
+            Console.WriteLine("=== RAUM VERFÜGBARKEIT ===");
+            
+            if (daten.Raeume.Count == 0)
+            {
+                Console.WriteLine("Keine Räume vorhanden!");
+                WaitForKey();
+                return;
+            }
+
+            for (int i = 0; i < daten.Raeume.Count; i++)
+            {
+                var raum = daten.Raeume[i];
+                Console.WriteLine($"{i + 1}. {raum.Bezeichnung} - {(raum.Verfuegbar ? "Verfügbar" : "Nicht verfügbar")}");
+            }
+            
+            Console.Write("Raum auswählen: ");
+            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= daten.Raeume.Count)
+            {
+                var raum = daten.Raeume[index - 1];
+                raum.Verfuegbar = !raum.Verfuegbar;
+                Console.WriteLine($"Raum {raum.Bezeichnung} ist jetzt {(raum.Verfuegbar ? "verfügbar" : "nicht verfügbar")}!");
+                SaveDaten();
+                WaitForKey();
+            }
+        }
+
         static void GeneratePlan()
         {
             Console.Clear();
             Console.WriteLine("=== STUNDENPLAN GENERIEREN ===");
-            
             if (daten.Schueler.Count == 0 || daten.Lehrpersonen.Count == 0 || daten.Raeume.Count == 0)
             {
                 Console.WriteLine("FEHLER: Nicht genug Daten! Brauche Schüler, Lehrpersonen und Räume.");
                 WaitForKey();
                 return;
             }
-
             var planer = new Planer(daten.Schueler, daten.Lehrpersonen, daten.Raeume);
             var plan = planer.ErstellePlan();
             daten.Stunden = plan.ToList();
             SaveDaten();
-            
             Console.WriteLine($"Stundenplan generiert! {daten.Stunden.Count} Stunden eingetragen.");
             WaitForKey();
         }
 
         static void ShowPlan()
-{
-    Console.Clear();
-    if (daten.Stunden == null || daten.Stunden.Count == 0)
-    {
-        Console.WriteLine("Kein Stundenplan vorhanden! Generiere zuerst einen Plan.");
-    }
-    else
-    {
-        var plan = Stundenplan.FromList(daten.Stunden);
-        
-        Console.WriteLine("=== STUNDENPLAN ===");
-        Console.WriteLine("Wähle Anzeige:");
-        Console.WriteLine("1. Tabellarische Übersicht");
-        Console.WriteLine("2. Detail-Ansicht (mit allen Infos)");
-        Console.Write("Auswahl: ");
-        
-        var input = Console.ReadLine();
-        if (input == "2")
         {
-            plan.AnzeigenDetail();
+            Console.Clear();
+            if (daten.Stunden == null || daten.Stunden.Count == 0)
+            {
+                Console.WriteLine("Kein Stundenplan vorhanden! Generiere zuerst einen Plan.");
+            }
+            else
+            {
+                var plan = Stundenplan.FromList(daten.Stunden);
+                Console.WriteLine("=== STUNDENPLAN ===");
+                Console.WriteLine("Wähle Anzeige:");
+                Console.WriteLine("1. Tabellarische Übersicht");
+                Console.WriteLine("2. Detail-Ansicht (mit allen Infos)");
+                Console.Write("Auswahl: ");
+                var input = Console.ReadLine();
+                if (input == "2")
+                {
+                    plan.AnzeigenDetail();
+                }
+                else
+                {
+                    plan.Anzeigen();
+                }
+                var score = plan.BewertePlan(out var r, out var z, out var res);
+                Console.WriteLine($"\nBewertung: {score:F2}");
+            }
+            WaitForKey();
         }
-        else
-        {
-            plan.Anzeigen();
-        }
-        
-        var score = plan.BewertePlan(out var r, out var z, out var res);
-        Console.WriteLine($"\nBewertung: {score:F2}");
-    }
-    WaitForKey();
-}
 
         static void WaitForKey()
         {
@@ -249,6 +355,9 @@ namespace Timetable_Project
             Console.ReadKey();
         }
 
+        /// <summary>
+        /// Lädt die Anwendungsdaten aus der JSON-Datei
+        /// </summary>
         static void LoadDaten()
         {
             try
@@ -256,10 +365,7 @@ namespace Timetable_Project
                 if (File.Exists(DATEI))
                 {
                     string json = File.ReadAllText(DATEI);
-                    daten = JsonSerializer.Deserialize<Daten>(json, new JsonSerializerOptions 
-                    { 
-                        PropertyNameCaseInsensitive = true 
-                    }) ?? new Daten();
+                    daten = JsonSerializer.Deserialize<Daten>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Daten();
                     Console.WriteLine($"Daten geladen: {daten.Faecher.Count} Fächer, {daten.Schueler.Count} Schüler");
                 }
                 else
@@ -274,6 +380,9 @@ namespace Timetable_Project
             }
         }
 
+        /// <summary>
+        /// Speichert die Anwendungsdaten in eine JSON-Datei
+        /// </summary>
         static void SaveDaten()
         {
             try

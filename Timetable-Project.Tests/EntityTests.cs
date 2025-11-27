@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Xunit;
 using Timetable_Project;
 
 namespace Timetable_Project.Tests
@@ -10,188 +9,180 @@ namespace Timetable_Project.Tests
     /// </summary>
     public class EntityTests
     {
-        #region Fach Tests
+        private static int testsRun = 0;
+        private static int testsPassed = 0;
+        private static int testsFailed = 0;
 
-        [Fact]
-        public void Fach_Constructor_SetsPropertiesCorrectly()
+        public static void RunAllTests()
         {
-            // Arrange & Act
-            var fach = new Fach(1, "Mathematik", 5);
+            Console.WriteLine("\n=== EntityTests ===\n");
+            
+            // Fach Tests
+            Fach_Constructor_SetsPropertiesCorrectly();
+            Fach_Properties_CanBeModified();
+            
+            // Lehrperson Tests
+            Lehrperson_Constructor_SetsPropertiesCorrectly();
+            Lehrperson_CanAddFaecher();
+            Lehrperson_IstVerfuegbar_ReturnsTrue_WhenNoRestrictions();
+            Lehrperson_IstVerfuegbar_RespectsVerfuegbarkeit();
+            Lehrperson_IstVerfuegbar_ReturnsTrue_ForEmptyTag();
+            
+            // Raum Tests
+            Raum_Constructor_SetsPropertiesCorrectly();
+            Raum_VerfuegbarDefaultsToTrue();
+            Raum_VerfuegbarCanBeChanged();
+            
+            // Schueler Tests
+            Schueler_Constructor_SetsPropertiesCorrectly();
+            Schueler_CanAddFaecher();
+            
+            // Stunde Tests
+            Stunde_CanBeCreated();
+            Stunde_PropertiesCanBeSet();
 
-            // Assert
-            Assert.Equal(1, fach.Id);
-            Assert.Equal("Mathematik", fach.Title);
-            Assert.Equal(5, fach.Wochenstunden);
+            Console.WriteLine($"\n--- EntityTests Summary ---");
+            Console.WriteLine($"Tests Run: {testsRun}");
+            Console.WriteLine($"Passed: {testsPassed}");
+            Console.WriteLine($"Failed: {testsFailed}");
         }
 
-        [Fact]
-        public void Fach_Properties_CanBeModified()
-        {
-            // Arrange
-            var fach = new Fach(1, "Mathematik", 5);
+        #region Test Helpers
 
-            // Act
+        private static void Assert(bool condition, string testName, string message = "")
+        {
+            testsRun++;
+            if (condition)
+            {
+                testsPassed++;
+                Console.WriteLine($"✓ {testName}");
+            }
+            else
+            {
+                testsFailed++;
+                Console.WriteLine($"✗ {testName}: {message}");
+            }
+        }
+
+        #endregion
+
+        #region Fach Tests
+
+        public static void Fach_Constructor_SetsPropertiesCorrectly()
+        {
+            var fach = new Fach(1, "Mathematik", 5);
+            Assert(fach.Id == 1 && fach.Title == "Mathematik" && fach.Wochenstunden == 5, 
+                   "Fach_Constructor_SetsPropertiesCorrectly");
+        }
+
+        public static void Fach_Properties_CanBeModified()
+        {
+            var fach = new Fach(1, "Mathematik", 5);
             fach.Title = "Physik";
             fach.Wochenstunden = 3;
-
-            // Assert
-            Assert.Equal("Physik", fach.Title);
-            Assert.Equal(3, fach.Wochenstunden);
+            Assert(fach.Title == "Physik" && fach.Wochenstunden == 3, 
+                   "Fach_Properties_CanBeModified");
         }
 
         #endregion
 
         #region Lehrperson Tests
 
-        [Fact]
-        public void Lehrperson_Constructor_SetsPropertiesCorrectly()
+        public static void Lehrperson_Constructor_SetsPropertiesCorrectly()
         {
-            // Arrange & Act
             var lp = new Lehrperson(1, "Dr. Schmidt");
-
-            // Assert
-            Assert.Equal(1, lp.Id);
-            Assert.Equal("Dr. Schmidt", lp.Name);
-            Assert.NotNull(lp.Faecher);
-            Assert.Empty(lp.Faecher);
+            Assert(lp.Id == 1 && lp.Name == "Dr. Schmidt" && lp.Faecher != null && lp.Faecher.Count == 0, 
+                   "Lehrperson_Constructor_SetsPropertiesCorrectly");
         }
 
-        [Fact]
-        public void Lehrperson_CanAddFaecher()
+        public static void Lehrperson_CanAddFaecher()
         {
-            // Arrange
             var lp = new Lehrperson(1, "Dr. Schmidt");
-
-            // Act
             lp.Faecher.Add("Mathematik");
             lp.Faecher.Add("Physik");
-
-            // Assert
-            Assert.Equal(2, lp.Faecher.Count);
-            Assert.Contains("Mathematik", lp.Faecher);
-            Assert.Contains("Physik", lp.Faecher);
+            Assert(lp.Faecher.Count == 2 && lp.Faecher.Contains("Mathematik") && lp.Faecher.Contains("Physik"), 
+                   "Lehrperson_CanAddFaecher");
         }
 
-        [Fact]
-        public void Lehrperson_IstVerfuegbar_ReturnsTrue_WhenNoRestrictions()
+        public static void Lehrperson_IstVerfuegbar_ReturnsTrue_WhenNoRestrictions()
         {
-            // Arrange
             var lp = new Lehrperson(1, "Dr. Schmidt");
-
-            // Act & Assert
-            Assert.True(lp.IstVerfuegbar("Montag"));
-            Assert.True(lp.IstVerfuegbar("Dienstag"));
+            Assert(lp.IstVerfuegbar("Montag") && lp.IstVerfuegbar("Dienstag"), 
+                   "Lehrperson_IstVerfuegbar_ReturnsTrue_WhenNoRestrictions");
         }
 
-        [Fact]
-        public void Lehrperson_IstVerfuegbar_RespectsVerfuegbarkeit()
+        public static void Lehrperson_IstVerfuegbar_RespectsVerfuegbarkeit()
         {
-            // Arrange
             var lp = new Lehrperson(1, "Dr. Schmidt");
             lp.Verfuegbarkeit["Montag"] = false;
             lp.Verfuegbarkeit["Dienstag"] = true;
-
-            // Act & Assert
-            Assert.False(lp.IstVerfuegbar("Montag"));
-            Assert.True(lp.IstVerfuegbar("Dienstag"));
+            Assert(!lp.IstVerfuegbar("Montag") && lp.IstVerfuegbar("Dienstag"), 
+                   "Lehrperson_IstVerfuegbar_RespectsVerfuegbarkeit");
         }
 
-        [Fact]
-        public void Lehrperson_IstVerfuegbar_ReturnsTrue_ForEmptyTag()
+        public static void Lehrperson_IstVerfuegbar_ReturnsTrue_ForEmptyTag()
         {
-            // Arrange
             var lp = new Lehrperson(1, "Dr. Schmidt");
-
-            // Act & Assert
-            Assert.True(lp.IstVerfuegbar(""));
-            Assert.True(lp.IstVerfuegbar(null));
+            Assert(lp.IstVerfuegbar("") && lp.IstVerfuegbar(null), 
+                   "Lehrperson_IstVerfuegbar_ReturnsTrue_ForEmptyTag");
         }
 
         #endregion
 
         #region Raum Tests
 
-        [Fact]
-        public void Raum_Constructor_SetsPropertiesCorrectly()
+        public static void Raum_Constructor_SetsPropertiesCorrectly()
         {
-            // Arrange & Act
             var raum = new Raum(1, "A101", 30);
-
-            // Assert
-            Assert.Equal(1, raum.Id);
-            Assert.Equal("A101", raum.Bezeichnung);
-            Assert.Equal(30, raum.Kapazitaet);
-            Assert.True(raum.Verfuegbar);
+            Assert(raum.Id == 1 && raum.Bezeichnung == "A101" && raum.Kapazitaet == 30 && raum.Verfuegbar, 
+                   "Raum_Constructor_SetsPropertiesCorrectly");
         }
 
-        [Fact]
-        public void Raum_VerfuegbarDefaultsToTrue()
+        public static void Raum_VerfuegbarDefaultsToTrue()
         {
-            // Arrange & Act
             var raum = new Raum(5, "B202", 25);
-
-            // Assert
-            Assert.True(raum.Verfuegbar);
+            Assert(raum.Verfuegbar, "Raum_VerfuegbarDefaultsToTrue");
         }
 
-        [Fact]
-        public void Raum_VerfuegbarCanBeChanged()
+        public static void Raum_VerfuegbarCanBeChanged()
         {
-            // Arrange
             var raum = new Raum(1, "A101", 30);
-
-            // Act
             raum.Verfuegbar = false;
-
-            // Assert
-            Assert.False(raum.Verfuegbar);
+            Assert(!raum.Verfuegbar, "Raum_VerfuegbarCanBeChanged");
         }
 
         #endregion
 
         #region Schueler_in Tests
 
-        [Fact]
-        public void Schueler_Constructor_SetsPropertiesCorrectly()
+        public static void Schueler_Constructor_SetsPropertiesCorrectly()
         {
-            // Arrange & Act
             var schueler = new Schueler_in(1, "Max Mustermann", 16, "10A");
-
-            // Assert
-            Assert.Equal(1, schueler.Id);
-            Assert.Equal("Max Mustermann", schueler.Name);
-            Assert.Equal(16, schueler.Alter);
-            Assert.Equal("10A", schueler.Klasse);
-            Assert.NotNull(schueler.Faecher);
-            Assert.Empty(schueler.Faecher);
+            Assert(schueler.Id == 1 && schueler.Name == "Max Mustermann" && 
+                   schueler.Alter == 16 && schueler.Klasse == "10A" && 
+                   schueler.Faecher != null && schueler.Faecher.Count == 0, 
+                   "Schueler_Constructor_SetsPropertiesCorrectly");
         }
 
-        [Fact]
-        public void Schueler_CanAddFaecher()
+        public static void Schueler_CanAddFaecher()
         {
-            // Arrange
             var schueler = new Schueler_in(1, "Max Mustermann", 16, "10A");
-
-            // Act
             schueler.Faecher.Add("Deutsch");
             schueler.Faecher.Add("Englisch");
             schueler.Faecher.Add("Mathematik");
-
-            // Assert
-            Assert.Equal(3, schueler.Faecher.Count);
-            Assert.Contains("Deutsch", schueler.Faecher);
-            Assert.Contains("Englisch", schueler.Faecher);
-            Assert.Contains("Mathematik", schueler.Faecher);
+            Assert(schueler.Faecher.Count == 3 && 
+                   schueler.Faecher.Contains("Deutsch") && 
+                   schueler.Faecher.Contains("Englisch") && 
+                   schueler.Faecher.Contains("Mathematik"), 
+                   "Schueler_CanAddFaecher");
         }
 
         #endregion
 
         #region Stunde Tests
 
-        [Fact]
-        public void Stunde_CanBeCreated()
+        public static void Stunde_CanBeCreated()
         {
-            // Arrange & Act
             var stunde = new Stunde
             {
                 Fach = "Mathematik",
@@ -201,37 +192,25 @@ namespace Timetable_Project.Tests
                 Tag = "Montag",
                 StundeNummer = 1
             };
-
-            // Assert
-            Assert.Equal("Mathematik", stunde.Fach);
-            Assert.Equal("Dr. Schmidt", stunde.Lehrperson);
-            Assert.Equal("A101", stunde.Raum);
-            Assert.Equal("10A", stunde.Klasse);
-            Assert.Equal("Montag", stunde.Tag);
-            Assert.Equal(1, stunde.StundeNummer);
+            Assert(stunde.Fach == "Mathematik" && stunde.Lehrperson == "Dr. Schmidt" && 
+                   stunde.Raum == "A101" && stunde.Klasse == "10A" && 
+                   stunde.Tag == "Montag" && stunde.StundeNummer == 1, 
+                   "Stunde_CanBeCreated");
         }
 
-        [Fact]
-        public void Stunde_PropertiesCanBeSet()
+        public static void Stunde_PropertiesCanBeSet()
         {
-            // Arrange
             var stunde = new Stunde();
-
-            // Act
             stunde.Fach = "Physik";
             stunde.Lehrperson = "Prof. Meyer";
             stunde.Raum = "B202";
             stunde.Klasse = "11B";
             stunde.Tag = "Dienstag";
             stunde.StundeNummer = 3;
-
-            // Assert
-            Assert.Equal("Physik", stunde.Fach);
-            Assert.Equal("Prof. Meyer", stunde.Lehrperson);
-            Assert.Equal("B202", stunde.Raum);
-            Assert.Equal("11B", stunde.Klasse);
-            Assert.Equal("Dienstag", stunde.Tag);
-            Assert.Equal(3, stunde.StundeNummer);
+            Assert(stunde.Fach == "Physik" && stunde.Lehrperson == "Prof. Meyer" && 
+                   stunde.Raum == "B202" && stunde.Klasse == "11B" && 
+                   stunde.Tag == "Dienstag" && stunde.StundeNummer == 3, 
+                   "Stunde_PropertiesCanBeSet");
         }
 
         #endregion

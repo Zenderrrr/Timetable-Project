@@ -1,4 +1,3 @@
-using Xunit;
 using Timetable_Project;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,55 +11,94 @@ namespace Timetable_Project.Tests
     /// </summary>
     public class StundenplanTests
     {
-        [Fact]
-        public void Stundenplan_Constructor_InitializesEmptyMatrix()
-        {
-            // Arrange & Act
-            var plan = new Stundenplan();
+        private static int testsRun = 0;
+        private static int testsPassed = 0;
+        private static int testsFailed = 0;
 
-            // Assert
-            Assert.NotNull(plan.Matrix);
-            Assert.Equal(Stundenplan.TAGE, plan.Matrix.GetLength(0));
-            Assert.Equal(Stundenplan.STUNDEN, plan.Matrix.GetLength(1));
+        public static void RunAllTests()
+        {
+            Console.WriteLine("\n=== StundenplanTests ===\n");
             
-            // Verify all cells are null
+            Stundenplan_Constructor_InitializesEmptyMatrix();
+            Stundenplan_IstFrei_ReturnsTrueForEmptySlot();
+            Stundenplan_IstFrei_ReturnsFalseForOccupiedSlot();
+            Stundenplan_Eintragen_SuccessfullyAddsStunde();
+            Stundenplan_Eintragen_FailsForOccupiedSlot();
+            Stundenplan_BewertePlan_ReturnsMaxScoreForEmptyPlan();
+            Stundenplan_BewertePlan_PenalizesRandstunden();
+            Stundenplan_BewertePlan_PenalizesZwischenstunden();
+            Stundenplan_BewertePlan_PenalizesMultipleRooms();
+            Stundenplan_ToList_ConvertsMatrixToList();
+            Stundenplan_FromList_CreatesMatrixFromList();
+            Stundenplan_FromList_HandlesNullList();
+            Stundenplan_FromList_IgnoresInvalidTags();
+            Stundenplan_ToListAndBack_PreservesData();
+            Stundenplan_Constants_AreCorrect();
+            Stundenplan_DefaultWeights_AreSet();
+            Stundenplan_Weights_CanBeModified();
+
+            Console.WriteLine($"\n--- StundenplanTests Summary ---");
+            Console.WriteLine($"Tests Run: {testsRun}");
+            Console.WriteLine($"Passed: {testsPassed}");
+            Console.WriteLine($"Failed: {testsFailed}");
+        }
+
+        #region Test Helpers
+
+        private static void Assert(bool condition, string testName, string message = "")
+        {
+            testsRun++;
+            if (condition)
+            {
+                testsPassed++;
+                Console.WriteLine($"✓ {testName}");
+            }
+            else
+            {
+                testsFailed++;
+                Console.WriteLine($"✗ {testName}: {message}");
+            }
+        }
+
+        #endregion
+
+        public static void Stundenplan_Constructor_InitializesEmptyMatrix()
+        {
+            var plan = new Stundenplan();
+            bool allNull = true;
+            
             for (int t = 0; t < Stundenplan.TAGE; t++)
             {
                 for (int s = 0; s < Stundenplan.STUNDEN; s++)
                 {
-                    Assert.Null(plan.Matrix[t, s]);
+                    if (plan.Matrix[t, s] != null) allNull = false;
                 }
             }
+            
+            Assert(plan.Matrix != null && 
+                   plan.Matrix.GetLength(0) == Stundenplan.TAGE && 
+                   plan.Matrix.GetLength(1) == Stundenplan.STUNDEN && 
+                   allNull, 
+                   "Stundenplan_Constructor_InitializesEmptyMatrix");
         }
 
-        [Fact]
-        public void Stundenplan_IstFrei_ReturnsTrueForEmptySlot()
+        public static void Stundenplan_IstFrei_ReturnsTrueForEmptySlot()
         {
-            // Arrange
             var plan = new Stundenplan();
-
-            // Act & Assert
-            Assert.True(plan.IstFrei(0, 0));
-            Assert.True(plan.IstFrei(2, 3));
-            Assert.True(plan.IstFrei(4, 7));
+            Assert(plan.IstFrei(0, 0) && plan.IstFrei(2, 3) && plan.IstFrei(4, 7), 
+                   "Stundenplan_IstFrei_ReturnsTrueForEmptySlot");
         }
 
-        [Fact]
-        public void Stundenplan_IstFrei_ReturnsFalseForOccupiedSlot()
+        public static void Stundenplan_IstFrei_ReturnsFalseForOccupiedSlot()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             plan.Eintragen(1, 2, stunde);
-
-            // Act & Assert
-            Assert.False(plan.IstFrei(1, 2));
+            Assert(!plan.IstFrei(1, 2), "Stundenplan_IstFrei_ReturnsFalseForOccupiedSlot");
         }
 
-        [Fact]
-        public void Stundenplan_Eintragen_SuccessfullyAddsStunde()
+        public static void Stundenplan_Eintragen_SuccessfullyAddsStunde()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde = new Stunde 
             { 
@@ -71,259 +109,189 @@ namespace Timetable_Project.Tests
                 Tag = "Montag",
                 StundeNummer = 1
             };
-
-            // Act
             bool result = plan.Eintragen(0, 0, stunde);
-
-            // Assert
-            Assert.True(result);
-            Assert.Equal(stunde, plan.Matrix[0, 0]);
+            Assert(result && plan.Matrix[0, 0] == stunde, 
+                   "Stundenplan_Eintragen_SuccessfullyAddsStunde");
         }
 
-        [Fact]
-        public void Stundenplan_Eintragen_FailsForOccupiedSlot()
+        public static void Stundenplan_Eintragen_FailsForOccupiedSlot()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10A" };
             plan.Eintragen(1, 2, stunde1);
-
-            // Act
             bool result = plan.Eintragen(1, 2, stunde2);
-
-            // Assert
-            Assert.False(result);
-            Assert.Equal(stunde1, plan.Matrix[1, 2]);
+            Assert(!result && plan.Matrix[1, 2] == stunde1, 
+                   "Stundenplan_Eintragen_FailsForOccupiedSlot");
         }
 
-        [Fact]
-        public void Stundenplan_BewertePlan_ReturnsMaxScoreForEmptyPlan()
+        public static void Stundenplan_BewertePlan_ReturnsMaxScoreForEmptyPlan()
         {
-            // Arrange
             var plan = new Stundenplan();
-
-            // Act
             double score = plan.BewertePlan(out var rand, out var zwischen, out var res);
-
-            // Assert
-            Assert.Equal(100.0, score);
-            Assert.Equal(0.0, rand);
-            Assert.Equal(0.0, zwischen);
-            Assert.Equal(0.0, res);
+            Assert(score == 100.0 && rand == 0.0 && zwischen == 0.0 && res == 0.0, 
+                   "Stundenplan_BewertePlan_ReturnsMaxScoreForEmptyPlan");
         }
 
-        [Fact]
-        public void Stundenplan_BewertePlan_PenalizesRandstunden()
+        public static void Stundenplan_BewertePlan_PenalizesRandstunden()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "A101", Klasse = "10A" };
-            
-            // First and last hour
             plan.Eintragen(0, 0, stunde1);
             plan.Eintragen(0, 7, stunde2);
-
-            // Act
             double score = plan.BewertePlan(out var rand, out var zwischen, out var res);
-
-            // Assert
-            Assert.True(rand > 0); // Should have penalty
-            Assert.Equal(2.0, rand); // Two edge hours
+            Assert(rand > 0 && rand == 2.0, 
+                   "Stundenplan_BewertePlan_PenalizesRandstunden", 
+                   $"Expected rand penalty > 0 and == 2.0, got {rand}");
         }
 
-        [Fact]
-        public void Stundenplan_BewertePlan_PenalizesZwischenstunden()
+        public static void Stundenplan_BewertePlan_PenalizesZwischenstunden()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "A101", Klasse = "10A" };
-            
-            // Create a gap: hour 1 and hour 3 occupied, hour 2 free
             plan.Eintragen(0, 1, stunde1);
             plan.Eintragen(0, 3, stunde2);
-
-            // Act
             double score = plan.BewertePlan(out var rand, out var zwischen, out var res);
-
-            // Assert
-            Assert.True(zwischen > 0); // Should have penalty for gap
+            Assert(zwischen > 0, 
+                   "Stundenplan_BewertePlan_PenalizesZwischenstunden", 
+                   $"Expected zwischen penalty > 0, got {zwischen}");
         }
 
-        [Fact]
-        public void Stundenplan_BewertePlan_PenalizesMultipleRooms()
+        public static void Stundenplan_BewertePlan_PenalizesMultipleRooms()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10A" };
             var stunde3 = new Stunde { Fach = "Englisch", Lehrperson = "Jones", Raum = "C303", Klasse = "10A" };
-            
             plan.Eintragen(0, 2, stunde1);
             plan.Eintragen(1, 2, stunde2);
             plan.Eintragen(2, 2, stunde3);
-
-            // Act
             double score = plan.BewertePlan(out var rand, out var zwischen, out var res);
-
-            // Assert
-            Assert.True(res > 0); // Should have penalty for multiple rooms
+            Assert(res > 0, 
+                   "Stundenplan_BewertePlan_PenalizesMultipleRooms", 
+                   $"Expected res penalty > 0, got {res}");
         }
 
-        [Fact]
-        public void Stundenplan_ToList_ConvertsMatrixToList()
+        public static void Stundenplan_ToList_ConvertsMatrixToList()
         {
-            // Arrange
             var plan = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10A" };
             var stunde3 = new Stunde { Fach = "Englisch", Lehrperson = "Jones", Raum = "C303", Klasse = "10A" };
             
-            plan.Eintragen(0, 1, stunde1); // Monday, 2nd hour
-            plan.Eintragen(2, 3, stunde2); // Wednesday, 4th hour
-            plan.Eintragen(4, 5, stunde3); // Friday, 6th hour
-
-            // Act
+            plan.Eintragen(0, 1, stunde1);
+            plan.Eintragen(2, 3, stunde2);
+            plan.Eintragen(4, 5, stunde3);
+            
             var list = plan.ToList();
-
-            // Assert
-            Assert.Equal(3, list.Count);
-            Assert.Contains(list, s => s.Fach == "Mathe" && s.Tag == "Montag" && s.StundeNummer == 2);
-            Assert.Contains(list, s => s.Fach == "Deutsch" && s.Tag == "Mittwoch" && s.StundeNummer == 4);
-            Assert.Contains(list, s => s.Fach == "Englisch" && s.Tag == "Freitag" && s.StundeNummer == 6);
+            
+            Assert(list.Count == 3 && 
+                   list.Any(s => s.Fach == "Mathe" && s.Tag == "Montag" && s.StundeNummer == 2) &&
+                   list.Any(s => s.Fach == "Deutsch" && s.Tag == "Mittwoch" && s.StundeNummer == 4) &&
+                   list.Any(s => s.Fach == "Englisch" && s.Tag == "Freitag" && s.StundeNummer == 6), 
+                   "Stundenplan_ToList_ConvertsMatrixToList");
         }
 
-        [Fact]
-        public void Stundenplan_FromList_CreatesMatrixFromList()
+        public static void Stundenplan_FromList_CreatesMatrixFromList()
         {
-            // Arrange
             var list = new List<Stunde>
             {
                 new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A", Tag = "Montag", StundeNummer = 1 },
                 new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10A", Tag = "Mittwoch", StundeNummer = 3 },
                 new Stunde { Fach = "Englisch", Lehrperson = "Jones", Raum = "C303", Klasse = "10A", Tag = "Freitag", StundeNummer = 5 }
             };
-
-            // Act
+            
             var plan = Stundenplan.FromList(list);
-
-            // Assert
-            Assert.NotNull(plan.Matrix[0, 0]); // Monday, 1st hour
-            Assert.Equal("Mathe", plan.Matrix[0, 0].Fach);
             
-            Assert.NotNull(plan.Matrix[2, 2]); // Wednesday, 3rd hour
-            Assert.Equal("Deutsch", plan.Matrix[2, 2].Fach);
-            
-            Assert.NotNull(plan.Matrix[4, 4]); // Friday, 5th hour
-            Assert.Equal("Englisch", plan.Matrix[4, 4].Fach);
+            Assert(plan.Matrix[0, 0] != null && plan.Matrix[0, 0].Fach == "Mathe" &&
+                   plan.Matrix[2, 2] != null && plan.Matrix[2, 2].Fach == "Deutsch" &&
+                   plan.Matrix[4, 4] != null && plan.Matrix[4, 4].Fach == "Englisch", 
+                   "Stundenplan_FromList_CreatesMatrixFromList");
         }
 
-        [Fact]
-        public void Stundenplan_FromList_HandlesNullList()
+        public static void Stundenplan_FromList_HandlesNullList()
         {
-            // Act
             var plan = Stundenplan.FromList(null);
-
-            // Assert
-            Assert.NotNull(plan);
-            Assert.NotNull(plan.Matrix);
+            bool allNull = true;
             
-            // Verify all cells are null
             for (int t = 0; t < Stundenplan.TAGE; t++)
             {
                 for (int s = 0; s < Stundenplan.STUNDEN; s++)
                 {
-                    Assert.Null(plan.Matrix[t, s]);
+                    if (plan.Matrix[t, s] != null) allNull = false;
                 }
             }
+            
+            Assert(plan != null && plan.Matrix != null && allNull, 
+                   "Stundenplan_FromList_HandlesNullList");
         }
 
-        [Fact]
-        public void Stundenplan_FromList_IgnoresInvalidTags()
+        public static void Stundenplan_FromList_IgnoresInvalidTags()
         {
-            // Arrange
             var list = new List<Stunde>
             {
                 new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A", Tag = "InvalidDay", StundeNummer = 1 },
                 new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10A", Tag = "", StundeNummer = 2 }
             };
-
-            // Act
+            
             var plan = Stundenplan.FromList(list);
-
-            // Assert
-            // Verify all cells are null since tags were invalid
+            bool allNull = true;
+            
             for (int t = 0; t < Stundenplan.TAGE; t++)
             {
                 for (int s = 0; s < Stundenplan.STUNDEN; s++)
                 {
-                    Assert.Null(plan.Matrix[t, s]);
+                    if (plan.Matrix[t, s] != null) allNull = false;
                 }
             }
+            
+            Assert(allNull, "Stundenplan_FromList_IgnoresInvalidTags");
         }
 
-        [Fact]
-        public void Stundenplan_ToListAndBack_PreservesData()
+        public static void Stundenplan_ToListAndBack_PreservesData()
         {
-            // Arrange
             var plan1 = new Stundenplan();
             var stunde1 = new Stunde { Fach = "Mathe", Lehrperson = "Schmidt", Raum = "A101", Klasse = "10A" };
             var stunde2 = new Stunde { Fach = "Deutsch", Lehrperson = "Meyer", Raum = "B202", Klasse = "10B" };
             
             plan1.Eintragen(0, 1, stunde1);
             plan1.Eintragen(2, 3, stunde2);
-
-            // Act
+            
             var list = plan1.ToList();
             var plan2 = Stundenplan.FromList(list);
-
-            // Assert
-            Assert.NotNull(plan2.Matrix[0, 1]);
-            Assert.Equal("Mathe", plan2.Matrix[0, 1].Fach);
-            Assert.Equal("Schmidt", plan2.Matrix[0, 1].Lehrperson);
             
-            Assert.NotNull(plan2.Matrix[2, 3]);
-            Assert.Equal("Deutsch", plan2.Matrix[2, 3].Fach);
-            Assert.Equal("Meyer", plan2.Matrix[2, 3].Lehrperson);
+            Assert(plan2.Matrix[0, 1] != null && plan2.Matrix[0, 1].Fach == "Mathe" && plan2.Matrix[0, 1].Lehrperson == "Schmidt" &&
+                   plan2.Matrix[2, 3] != null && plan2.Matrix[2, 3].Fach == "Deutsch" && plan2.Matrix[2, 3].Lehrperson == "Meyer", 
+                   "Stundenplan_ToListAndBack_PreservesData");
         }
 
-        [Fact]
-        public void Stundenplan_Constants_AreCorrect()
+        public static void Stundenplan_Constants_AreCorrect()
         {
-            // Assert
-            Assert.Equal(5, Stundenplan.TAGE);
-            Assert.Equal(8, Stundenplan.STUNDEN);
+            Assert(Stundenplan.TAGE == 5 && Stundenplan.STUNDEN == 8, 
+                   "Stundenplan_Constants_AreCorrect");
         }
 
-        [Fact]
-        public void Stundenplan_DefaultWeights_AreSet()
+        public static void Stundenplan_DefaultWeights_AreSet()
         {
-            // Arrange & Act
             var plan = new Stundenplan();
-
-            // Assert
-            Assert.Equal(1.0, plan.GewichtRandstunden);
-            Assert.Equal(1.0, plan.GewichtZwischenstunden);
-            Assert.Equal(0.2, plan.GewichtRessourcen);
+            Assert(plan.GewichtRandstunden == 1.0 && 
+                   plan.GewichtZwischenstunden == 1.0 && 
+                   plan.GewichtRessourcen == 0.2, 
+                   "Stundenplan_DefaultWeights_AreSet");
         }
 
-        [Fact]
-        public void Stundenplan_Weights_CanBeModified()
+        public static void Stundenplan_Weights_CanBeModified()
         {
-            // Arrange
             var plan = new Stundenplan();
-
-            // Act
             plan.GewichtRandstunden = 2.0;
             plan.GewichtZwischenstunden = 1.5;
             plan.GewichtRessourcen = 0.5;
-
-            // Assert
-            Assert.Equal(2.0, plan.GewichtRandstunden);
-            Assert.Equal(1.5, plan.GewichtZwischenstunden);
-            Assert.Equal(0.5, plan.GewichtRessourcen);
+            Assert(plan.GewichtRandstunden == 2.0 && 
+                   plan.GewichtZwischenstunden == 1.5 && 
+                   plan.GewichtRessourcen == 0.5, 
+                   "Stundenplan_Weights_CanBeModified");
         }
     }
 }

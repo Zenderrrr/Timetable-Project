@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "5BN3prpFfxk=",
+  "success": true,
+  "projectFilePath": "/home/gian/Downloads/Timetable-Project-main/Timetable-Project.Tests/Timetable-Project.Tests.csproj",
+  "expectedPackageFiles": [
+    "/home/gian/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.9/microsoft.aspnetcore.app.ref.9.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

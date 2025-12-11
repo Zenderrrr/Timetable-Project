@@ -320,8 +320,12 @@ namespace Timetable_Project
             return;
         }
 
-        var planer = new Planer(daten.Schueler, daten.Lehrpersonen, daten.Raeume);
-    var plan = planer.ErstellePlan();
+
+        // Nutze die neuen Interfaces (ganz einfach)
+        var evaluator = new SimpleScheduleEvaluator();
+        var availability = new SimpleAvailabilityProvider();
+        var planer = new Planer(daten.Schueler, daten.Lehrpersonen, daten.Raeume, evaluator, availability);
+        var plan = planer.ErstellePlan();
 
         daten.Stunden = plan.ToList();
         SaveDaten();

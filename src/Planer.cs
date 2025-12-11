@@ -14,11 +14,20 @@ namespace Timetable_Project
         private readonly List<Raum> raeume;
         private readonly Random random = new();
 
-        public Planer(List<Schueler_in> schueler, List<Lehrperson> lehrpersonen, List<Raum> raeume)
+        // Neue Felder für die Interfaces
+        private readonly IScheduleEvaluator evaluator;
+        private readonly IAvailabilityProvider availabilityProvider;
+
+        // Konstruktor nimmt jetzt auch die Interfaces entgegen (kann auch Standard nehmen)
+        public Planer(List<Schueler_in> schueler, List<Lehrperson> lehrpersonen, List<Raum> raeume,
+            IScheduleEvaluator evaluator = null, IAvailabilityProvider availabilityProvider = null)
         {
             this.schueler = schueler ?? new List<Schueler_in>();
             this.lehrpersonen = lehrpersonen ?? new List<Lehrperson>();
             this.raeume = raeume ?? new List<Raum>();
+            // Wenn nichts übergeben, nimm die einfachen Implementierungen
+            this.evaluator = evaluator ?? new SimpleScheduleEvaluator();
+            this.availabilityProvider = availabilityProvider ?? new SimpleAvailabilityProvider();
         }
 
         /// <summary>
@@ -27,21 +36,25 @@ namespace Timetable_Project
         public Stundenplan ErstellePlan()
         {
             var plan = new Stundenplan();
-            
+
             var klassenGruppen = schueler.GroupBy(s => s.Klasse);
-            
+
             foreach (var klasse in klassenGruppen)
             {
                 var klassenName = klasse.Key;
                 var schuelerInKlasse = klasse.ToList();
-                
+
                 var klassenFaecher = ErmittleKlassenFaecher(schuelerInKlasse);
-                
+
                 foreach (var fach in klassenFaecher)
                 {
                     PlatziereFachFuerKlasse(plan, klassenName, fach.Key, fach.Value);
                 }
             }
+
+            // Beispiel: Plan bewerten und ausgeben
+            int bewertung = evaluator.Bewerte(plan);
+            Console.WriteLine("Bewertung des Plans: " + bewertung);
 
             return plan;
         }
@@ -81,9 +94,10 @@ namespace Timetable_Project
                 var raum = verfuegbareRaeume[random.Next(verfuegbareRaeume.Count)];
 
                 if (!plan.IstFrei(tagIdx, stundeIdx)) continue;
-                
-                if (!lehrperson.IstVerfuegbar(Stundenplan.TAGE_NAMEN[tagIdx])) continue;
-                
+
+                // NEU: Verfügbarkeit über das Interface prüfen
+                if (!availabilityProvider.IstVerfuegbar(lehrperson.Name, stundeIdx)) continue;
+
                 bool lehrpersonBelegt = false;
                 for (int t = 0; t < Stundenplan.TAGE && !lehrpersonBelegt; t++)
                 {
@@ -115,7 +129,7 @@ namespace Timetable_Project
                     Tag = Stundenplan.TAGE_NAMEN[tagIdx],
                     StundeNummer = stundeIdx + 1
                 };
-                
+
                 plan.Eintragen(tagIdx, stundeIdx, neueStunde);
                 platziert++;
             }

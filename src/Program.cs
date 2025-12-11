@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Timetable_Project.Validation;
 
 namespace Timetable_Project
 {
@@ -302,22 +303,31 @@ namespace Timetable_Project
         }
 
         static void GeneratePlan()
+    {
+     Console.Clear();
+        Console.WriteLine("=== STUNDENPLAN GENERIEREN ===");
+
+        var validator = new DataValidator();
+        var errors = validator.Validate(daten);
+
+        if (errors.Any())
         {
-            Console.Clear();
-            Console.WriteLine("=== STUNDENPLAN GENERIEREN ===");
-            if (daten.Schueler.Count == 0 || daten.Lehrpersonen.Count == 0 || daten.Raeume.Count == 0)
-            {
-                Console.WriteLine("FEHLER: Nicht genug Daten! Brauche Schüler, Lehrpersonen und Räume.");
-                WaitForKey();
-                return;
-            }
-            var planer = new Planer(daten.Schueler, daten.Lehrpersonen, daten.Raeume);
-            var plan = planer.ErstellePlan();
-            daten.Stunden = plan.ToList();
-            SaveDaten();
-            Console.WriteLine($"Stundenplan generiert! {daten.Stunden.Count} Stunden eingetragen.");
+            Console.WriteLine("FEHLERREPORT:");
+            foreach (var error in errors)
+                Console.WriteLine(" - " + error);
+
             WaitForKey();
+            return;
         }
+
+        var planer = new Planer(daten.Schueler, daten.Lehrpersonen, daten.Raeume);
+    var plan = planer.ErstellePlan();
+
+        daten.Stunden = plan.ToList();
+        SaveDaten();
+        Console.WriteLine($"Stundenplan generiert! {daten.Stunden.Count} Stunden.");
+        WaitForKey();
+    }
 
         static void ShowPlan()
         {

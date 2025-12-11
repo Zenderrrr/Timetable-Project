@@ -32,6 +32,23 @@ namespace Timetable_Project
             return Matrix[tag, stunde] == null;
         }
 
+        //für UTest
+        public bool HatLehrpersonKollision()
+        {
+            var belegungen = new Dictionary<(string, int), string>();
+
+            foreach (var st in Matrix)
+            {
+                if (st == null) continue;
+                var key = (st.Tag, st.StundeNummer);
+                if (belegungen.TryGetValue(key, out var lp))
+                    if (lp == st.Lehrperson) return true;
+
+                belegungen[key] = st.Lehrperson;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Trägt eine Stunde an einer bestimmten Position im Stundenplan ein
         /// </summary>
